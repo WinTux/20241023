@@ -22,6 +22,7 @@ public class Primero {
 	@RequestMapping("/") // http://localhost:8080/ [GET]
 	@ResponseBody
 	public String saludarAtodos() {
+		logger.debug("Se acaba de llamar al endpoint /.");
 		return "Hola a todos!! :D "+ val;
 	}
 	@RequestMapping("/cerrar") // http://localhost:8080/cerrar [GET]
