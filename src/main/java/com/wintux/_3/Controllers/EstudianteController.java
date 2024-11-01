@@ -1,11 +1,15 @@
 package com.wintux._3.Controllers;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URI;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -17,12 +21,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.wintux._3.Models.Estudiante;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 @Controller
 public class EstudianteController {
@@ -43,6 +50,40 @@ public class EstudianteController {
 	public ResponseEntity<Object> getEstudiantes(){
 		return new ResponseEntity<>(estudiantes.values(),HttpStatus.OK); // 200
 	}
+	
+	@GetMapping("/estudiante/status") // http://localhost:7001/estudiante/status [GET]
+	public ResponseEntity<String> customHeaders(){
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("Modo-Universidad", "CRISIS");
+		headers.add("Permiso-cifrado", "true");
+		headers.add("Cantidad-Activos", "254");
+		return new ResponseEntity<>("Respuesta con encabezados.",headers, HttpStatus.OK); // 200
+	}
+	@GetMapping("/estudiante/edad") // http://localhost:7001/estudiante/edad?nacimiento=2000 [GET]
+	public ResponseEntity<String> age(@RequestParam("nacimiento") int nacimiento){
+		if(estaEnElFuturo(nacimiento)) {
+			return ResponseEntity.badRequest().body(String.format("El año de nacimiento no puede estar en el futuro (%d)", nacimiento));
+		}
+		LocalDate fechaActual = LocalDate.now();
+		DateTimeFormatter formateador = DateTimeFormatter.ofPattern("dd/MM/yyyy"); // 01/01/2024
+		return ResponseEntity.status(HttpStatus.OK).header("Anyo-nacimiento", nacimiento+"").header("Fecha-de-servidor", fechaActual.format(formateador)).body(String.format("La edad es de %d años", calcularEdad(nacimiento)));
+	}
+	
+	private Object calcularEdad(int nacimiento) {
+		return java.time.Year.now().getValue() - nacimiento;
+	}
+
+	private boolean estaEnElFuturo(int nacimiento) {
+		return nacimiento > java.time.Year.now().getValue();
+	}
+	
+	@GetMapping("/estudiante/pruebacruda") // http://localhost:7001/estudiante/pruebacruda [GET]
+	public void ejemploCrudo(HttpServletResponse response) throws IOException{
+		response.setHeader("Codigo-depuracion", "XZ-400");
+		response.setStatus(200);
+		response.getWriter().println("Éxito");
+	}
+	
 	@PostMapping("/estudiante") // http://localhost:7001/estudiante [POST]
 	public ResponseEntity<Object> nuevoEstudiantes(@RequestBody Estudiante est){
 		estudiantes.put(est.getId()+"", est);
