@@ -11,6 +11,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.ReflectionUtils;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -135,5 +137,10 @@ public class EstudianteController {
 			e.printStackTrace();
 			return new ResponseEntity<>("[JSON PATCH] ocurrió un error al intentar modificar al estudiante "+id,HttpStatus.INTERNAL_SERVER_ERROR); // 500
 		}
+	}
+	@ResponseBody
+	@PostMapping(value="/estudiante/get", produces=MediaType.APPLICATION_JSON_VALUE) // http://localhost:7001/estudiante/get [GET]
+	public Estudiante retornarUnEstudiante() {
+		return estudiantes.get("1");
 	}
 }
