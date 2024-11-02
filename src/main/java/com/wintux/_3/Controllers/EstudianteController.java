@@ -1,5 +1,7 @@
 package com.wintux._3.Controllers;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URI;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -145,5 +148,12 @@ public class EstudianteController {
 	@PostMapping(value="/estudiante/get", produces=MediaType.APPLICATION_JSON_VALUE) // http://localhost:7001/estudiante/get [GET]
 	public Estudiante retornarUnEstudiante() {
 		return estudiantes.get("1");
+	}
+	@PostMapping(value="/estudiante/subida", consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<String> archivoSubir(@RequestParam("archivito") MultipartFile arch) throws IOException{
+		File elArchivo = new File("/home/rusok/Descargas"+arch.getOriginalFilename());
+		FileOutputStream fos = new FileOutputStream(elArchivo);
+		fos.write(arch.getBytes());
+		return ResponseEntity.ok("El archivo fue subido con éxito.");
 	}
 }
