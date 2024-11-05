@@ -13,6 +13,7 @@ import jakarta.servlet.Filter;
 public class ConfiguracionDeSeguridad {
 	@Autowired
 	private ControlConexionFilter filtro;
+	
 	FilterRegistrationBean<Filter> miFilterRegBean(){
 		FilterRegistrationBean<Filter> fil = new FilterRegistrationBean<Filter>();
 		fil.setFilter(filtro);
