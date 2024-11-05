@@ -2,6 +2,7 @@ package com.wintux._3.Configuration;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 
@@ -13,7 +14,7 @@ import jakarta.servlet.Filter;
 public class ConfiguracionDeSeguridad {
 	@Autowired
 	private ControlConexionFilter filtro;
-	
+	@Bean
 	FilterRegistrationBean<Filter> miFilterRegBean(){
 		FilterRegistrationBean<Filter> fil = new FilterRegistrationBean<Filter>();
 		fil.setFilter(filtro);
