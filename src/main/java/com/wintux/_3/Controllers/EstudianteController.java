@@ -10,7 +10,9 @@ import java.net.URI;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
@@ -36,7 +38,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.wintux._3.Excepciones.EstudianteNoEncontradoException;
+import com.wintux._3.Models.Est;
 import com.wintux._3.Models.Estudiante;
+import com.wintux._3.Services.EstudianteService;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -45,6 +49,8 @@ public class EstudianteController {
 	private static Map<String,Estudiante> estudiantes = new HashMap<>();
 	@Autowired
 	ObjectMapper objectMapper;
+	@Autowired
+	EstudianteService estServ;
 	
 	static {
 		Estudiante e1 = new Estudiante(1, "Pepe","Perales");
@@ -57,7 +63,13 @@ public class EstudianteController {
 	
 	@GetMapping("/estudiante") // http://localhost:7001/estudiante [GET]
 	public ResponseEntity<Object> getEstudiantes(){
-		return new ResponseEntity<>(estudiantes.values(),HttpStatus.OK); // 200
+		//return new ResponseEntity<>(estudiantes.values(),HttpStatus.OK); // 200
+		return new ResponseEntity<>(estServ.lista(),HttpStatus.OK); // 200
+	}
+	@GetMapping("/estudiante/{ap}")
+	public ResponseEntity<Object> getEestudiantePorApellido(@PathVariable("ap") String apellido){
+		List<Est> ests = estServ.listaPorApellidos(apellido);
+		return new ResponseEntity<>(ests,HttpStatus.OK); // 200
 	}
 	
 	@GetMapping("/estudiante/status") // http://localhost:7001/estudiante/status [GET]
@@ -94,28 +106,52 @@ public class EstudianteController {
 	}
 	
 	@PostMapping("/estudiante") // http://localhost:7001/estudiante [POST]
-	public ResponseEntity<Object> nuevoEstudiantes(@RequestBody Estudiante est){
-		estudiantes.put(est.getId()+"", est);
+	public ResponseEntity<Object> nuevoEstudiantes(@RequestBody Est est){
+		//estudiantes.put(est.getId()+"", est);
+		estServ.registrar(est);
+		
 		//return new ResponseEntity<>("Se creó un nuevo estudiante",HttpStatus.CREATED); // 201
 		// <--- http://localhost:7001/estudiante/7 (location)
 		URI ubicacionRecurso = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
-				.buildAndExpand(est.getId()).toUri();
+				.buildAndExpand(est.getMatricula()).toUri();
 		return ResponseEntity.created(ubicacionRecurso).build(); // 201
 	}
 	
 	@PutMapping("/estudiante/{id}") // http://localhost:7001/estudiante/{id} [PUT]
-	public ResponseEntity<Object> modificarEstudiante(@PathVariable("id") String id, @RequestBody Estudiante est){
-		if(!estudiantes.containsKey(id))
+	public ResponseEntity<Object> modificarEstudiante(@PathVariable("id") String id, @RequestBody Est est){
+		Optional<Est> estudiante = estServ.hallarEstudiante(Integer.parseInt(id));
+		if(!estudiante.isPresent())
+			throw new EstudianteNoEncontradoException();
+		Est estDDBB = estudiante.get();
+		estDDBB.setNombre(est.getNombre());
+		estDDBB.setApellido(est.getApellido());
+		estDDBB.setFechanacimiento(est.getFechanacimiento());
+		estDDBB.setCarreraid(est.getCarreraid());
+		estDDBB.setPassword(est.getPassword());
+		estDDBB.setEmail(est.getEmail());
+		estDDBB.setEstado(est.getEstado());
+		estServ.registrar(estDDBB);
+		return new ResponseEntity<>("Se modificaron atributos del estudiante "+id,HttpStatus.OK); // 200 
+		/*if(!estudiantes.containsKey(id))
 			throw new EstudianteNoEncontradoException();
 		estudiantes.remove(id);
 		est.setId(Integer.parseInt(id));
 		estudiantes.put(id, est);
-		return new ResponseEntity<>("Se modificaron atributos del estudiante "+id,HttpStatus.OK); // 200
+		return new ResponseEntity<>("Se modificaron atributos del estudiante "+id,HttpStatus.OK); // 200 */
+		
 	}
 	@DeleteMapping("/estudiante/{id}") // http://localhost:7001/estudiante/{id} [DELETE]
 	public ResponseEntity<Object> eliminarEstudiante(@PathVariable("id") String id){
+		Optional<Est> estudiante = estServ.hallarEstudiante(Integer.parseInt(id));
+		if(!estudiante.isPresent())
+			throw new EstudianteNoEncontradoException();
+		Est estDDBB = estudiante.get();
+		estServ.eliminar(estDDBB);
+		return new ResponseEntity<>("Se eliminó al estudiante "+id,HttpStatus.OK); // 200
+		/*
 		estudiantes.remove(id);
 		return new ResponseEntity<>("Se eliminó al estudiante "+id,HttpStatus.OK); // 200
+		*/
 	}
 	
 	@PatchMapping("/estudiante/{id}")
